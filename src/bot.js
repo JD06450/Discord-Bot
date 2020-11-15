@@ -12,6 +12,15 @@ const rpsKey = [ ["Rock", ":rock:"], ["Paper", ":scroll:"], ["Scissors", ":sciss
 let PREFIX = configFile.PREFIX;
 let configData = {PREFIX: PREFIX}
 
+function checkPerms(allowedRole, message) {
+    if (!message.member.roles.cache.has(allowedRole)) {
+        message.channel.send("Sorry, but you don't have permission to use this command.");
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 client.on("ready", () => {
     console.log(`${client.user.tag} has logged in`);
 });
@@ -47,6 +56,7 @@ client.on("message", (message) => {
             break;
 
             case "setprefix":
+                if (!checkPerms("777414469792825354", message)) {return;}
                 let newPrefix = args[0] || "$";
                 if (newPrefix.toUpperCase() == "DEFAULT") {newPrefix = "$";}
                 PREFIX = newPrefix;
@@ -66,19 +76,14 @@ client.on("message", (message) => {
 
             case "rps":
                 let PLAYER_INPUT;
-                
-                try {
-                    PLAYER_INPUT = rpsKey.findIndex((item) => item[0].toUpperCase() == args[0].toUpperCase()).toString() || "error";
-                } catch {
-                    if (args[0] == undefined) {message.channel.send("No move specified. Cancelling game."); return;}
-                    message.channel.send(`${args[0]} isn\'t a valid input. Please try again.`);
-                    return;
+                PLAYER_INPUT = rpsKey.findIndex((item) => item[0].toUpperCase() == args[0].toUpperCase());
+                if (PLAYER_INPUT < 0) {
+                    PLAYER_INPUT = "error";
                 }
                 
                 if (args[0] == undefined) {message.channel.send("No move specified. Cancelling game."); return;}
                 if (PLAYER_INPUT == "error") {message.channel.send(`${args[0]} isn\'t a valid input. Please try again.`); return;}
 
-                PLAYER_INPUT = parseInt(PLAYER_INPUT);
                 let AI_CHOICE = Math.floor(Math.random() * 3);
                 
                 let WINNER;
@@ -123,9 +128,9 @@ client.on("message", (message) => {
 
 client.login(botToken);
 
-const http = require('http');
-const server = http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end('ok');
-});
-server.listen(3000);
+// const http = require('http');
+// const server = http.createServer((req, res) => {
+//   res.writeHead(200);
+//   res.end('ok');
+// });
+// server.listen(3000);
