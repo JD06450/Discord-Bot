@@ -8,14 +8,16 @@ const database = new Database();
 const botToken = process.env.DISCORDJS_BOT_TOKEN;
 const client = new Client();
 
-console.log(`${process.env.REPLIT_DB_URL}`);
-
 const rpsKey = [ ["Rock", ":rock:"], ["Paper", ":page_with_curl:"], ["Scissors", ":scissors:"] ];
 
-function checkRole(message) {
-    let reqRole;
-    (async () => { reqrole = database.get(`${message.guild.id}botRole`); if (reqRole == null) {reqRole="Swampy's Bot Mod"} })();
-    if (!message.member.roles.cache.find((r) => r.name === reqRole)) {
+async function checkRole(message) {
+    let reqRole = await database.get(`${message.guild.id}botRole`);
+    
+    if (reqRole == null || reqRole == "") {
+        reqRole="Swampy's Bot Mod";
+    }
+    
+    if (!message.member.roles.cache.find((r) => r.name == reqRole)) {
         message.channel.send("Sorry, but you don't have permission to use this command.");
         return 0;
     } else {
@@ -29,14 +31,17 @@ client.on("ready", () => {
 
 
 client.on("message", (message) => {
+    let hasPermission;
     if (message.author.bot) {return;}
     if (message.channel.type == "dm") {return;}
     (async () => {
         let PREFIX = await database.get(`${message.guild.id}PREFIX`);
-        if (PREFIX == null) {
+        if (PREFIX == null || PREFIX == "") {
             PREFIX = "$";
         } 
-        
+        if (PREFIX.startsWith("\"") && PREFIX.endsWith("\"")) {
+            PREFIX = PREFIX.substring(1, PREFIX.length - 1);
+        }
         if (message.content.startsWith(PREFIX)) {
             const [CMD_NAME, ...args] = message.content
                 .trim()
@@ -65,7 +70,9 @@ client.on("message", (message) => {
                     break;
 
                     case "setprefix":
-                        if (!checkRole(message)) {return;}
+                        hasPermission = await checkRole(message);
+                        
+                        if (!hasPermission) {return;}
                         let newPrefix = args[0] || "$";
                         if (newPrefix.toUpperCase() == "DEFAULT") {newPrefix = "$";}
                         
@@ -123,7 +130,9 @@ client.on("message", (message) => {
                     break;
 
                     case "changeBotAdminRole":
-                        if (!checkRole(message)) {return;}
+                        hasPermission = await checkRole(message);
+                        
+                        if (!hasPermission) {return;}
                         let role = args[0];
                         let newRole;
 
@@ -134,8 +143,8 @@ client.on("message", (message) => {
                         if (newRole == undefined) { message.channel.send("Sorry, I couldn't find the role you wanted."); return; }
                         if (newRole.name == "@everyone") { message.channel.send(`I'm sorry, but you cannot set the bot admin role to @everyone.`, {"allowedMentions": { "roles" : []}}); return; }
                         
-                        await database.set(`${message.guild.id}botRole`, `${newRole}`);
-                        
+                        let dbResult = await database.set(`${message.guild.id}botRole`, `${newRole.name}`);
+
                         message.channel.send(`Bot admin commands can now only be performed by role: ${newRole.name}`, {allowedMentions: {"roles": []}});
                     break;
 
@@ -149,7 +158,6 @@ client.on("message", (message) => {
             }
         }
     })();
-    
 });
 
 
