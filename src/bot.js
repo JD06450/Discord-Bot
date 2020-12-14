@@ -65,7 +65,7 @@ client.on("message", (message) => {
                     break;
 
                     case "setprefix":
-                        if (!chackRole(message)) {return;}
+                        if (!checkRole(message)) {return;}
                         let newPrefix = args[0] || "$";
                         if (newPrefix.toUpperCase() == "DEFAULT") {newPrefix = "$";}
                         
