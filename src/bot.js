@@ -134,6 +134,10 @@ client.on("message", (message) => {
                         
                         if (!hasPermission) {return;}
                         let role = args[0];
+                        if (role == "") {
+                            message.channel.send("No role specified.");
+                            return;
+                        }
                         let newRole;
 
                         if (role.startsWith("<@&") && role.endsWith(">")) {role = role.substring(3, role.length - 1)}
